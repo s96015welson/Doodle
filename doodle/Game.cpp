@@ -171,6 +171,9 @@ void Game::updating()
     if (player->move_action == FALL)
         touch_stair = getWherePlayerStandingOn(player);
 
+    if ((touch_stair != nullptr) && (touch_stair->get_stairtype() == stair_broken))
+        touch_stair->change_stair_type(stair_disappear);
+
     // player rises or falls ?
     if (player->move_action == RISE)
     {
@@ -209,13 +212,14 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
     if (player->move_action == FALL)
         for (Stair *stair : stairs)
         {
+
             // whether touch stair
             if (((player->pos_Left() > stair->pos_Left() && player->pos_Left() < stair->pos_Right()) ||
                  (player->pos_Right() > stair->pos_Left() && player->pos_Right() < stair->pos_Right())) &&
-                (player->pos_Down() < stair->pos_Down() && player->pos_Down() > stair->pos_Up()))
+                (player->pos_Down() < stair->pos_Down() && player->pos_Down() > stair->pos_Up()) &&
+                (stair->get_stairtype() != stair_disappear))
             {
                 // touch stair
-
                 player->move_action = RISE;
                 player->UP_times = BASIC_JUMP / PLAYER_RISING_SPEED;
                 return stair;
@@ -241,9 +245,9 @@ void Game::updatingStairs()
         stairs.pop_front();              // delete stair from queue
     }
 
-    // renew the position of all the stairs
-    // for (Stair *stair : stairs)
-    //    stair->fall();
+    // moving/disappearing stairs action
+    for (Stair *stair : stairs)
+        stair->stair_action();
 
     // add new stair
     static int stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));

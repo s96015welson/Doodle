@@ -3,7 +3,7 @@
 
 #define FRAME_DELAY 50
 
-//image size
+//basic image size
 #define SCREEN_WIDTH 540
 #define SCREEN_HEIGHT 960
 
@@ -26,7 +26,10 @@
 #define jet_pack_height 72
 
 #define bullet_width 20
-#define bullet_height 20
+#define bullet_height 
+
+
+
 
 
 //jump and fly distance
@@ -36,7 +39,7 @@
 #define PROPELLER_HAT_FLY 3840
 #define JETPACK_FLY 7680
 
-#define MAX_STAIR_INTERVAL 270
+#define MAX_STAIR_INTERVAL 200
 #define MIN_STAIR_INTERVAL 60
 
 #define FLY 3
@@ -55,25 +58,31 @@
 # define unlock_propeller_hat_score 9000
 # define unlock_jet_pack_score 12000
 
-# define UNLOCK_MOVING_PLATFORM 6000
-# define UNLOCK_DISAPPEARING_PLATFORM 9000
+# define UNLOCK_MOVING_PLATFORM 600 //6000
+# define UNLOCK_DISAPPEARING_PLATFORM 900 //9000
 
-//default player setting
+//player setting
 #define PLAYER_START_POSITION_X 100
 #define PLAYER_START_POSITION_Y 600
 
-#define PLAYER_MOVING_SPEED 10 
+#define PLAYER_MOVING_SPEED 20 
 #define PLAYER_RISING_SPEED 40 
-#define PLAYER_FALLING_SPEED 5
+#define PLAYER_FALLING_SPEED 10
 #define PLAYER_JUMPING_SPEED 50
 #define PLAYER_FLYING_SPEED 100
 #define PLAYER_ACCELRATION 1
 
-#define LR_DISTANCE 80
+#define LR_DISTANCE 120
 
 
 //stair setting
-#define STAIR_FALLING_SPEED 2
+#define STAIR_FALLING_SPEED 5
+#define STAIR_MOVING_SPEED 4
+#define MAX_STAIR_MOVING_PIXEL 200
+#define MIN_STAIR_MOVING_PIXEL 40
+
+#define STAIR_FALLING_ACCELERATION 4
+
 
 //default setting
 # define DEFAULT_HEALTH 3
@@ -91,11 +100,33 @@
 enum ITEM_ORDER {
     // buttom
     STAIR_ITEM_ORDER,
+    BROKEN_STAIR_ITEM_ORDER,
     PLAYER_ITEM_ORDER,
     TEXT_ITEM_ORDER 
     // top
 };
 
+enum StairType
+{
+    stair_basic,
+    stair_moving,
+    stair_broken,
+    NUM_OF_STAIR_TYPE, // This value is intented to keep the number of elements in this enum.
+    stair_disappear
+};
+
+
+
+
+//special image size
+#define STAIR_BROKEN2_WIDTH 125
+#define STAIR_BROKEN2_HEIGHT 40
+
+#define STAIR_BROKEN3_WIDTH 125
+#define STAIR_BROKEN3_HEIGHT 57
+
+#define STAIR_BROKEN4_WIDTH 125
+#define STAIR_BROKEN4_HEIGHT 64
 
 
 #endif // PARAMETER_H

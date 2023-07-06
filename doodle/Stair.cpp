@@ -12,10 +12,11 @@ extern Game *game;
 
 Stair::Stair(Score *score, QGraphicsItem *parent) : QObject(), QGraphicsPixmapItem(parent)
 {
-  int random_x = rand() % (SCREEN_WIDTH - STAIR_WIDTH);
+  // decide initial position
+  initial_pos_x = rand() % (SCREEN_WIDTH - STAIR_WIDTH);
 
   stair_type = decide_stair_type(score); // decide stair type
-  setPos(random_x, 0);
+  setPos(initial_pos_x, 0);
   setZValue(STAIR_ITEM_ORDER);
   initPixmap();
 }
@@ -27,15 +28,24 @@ void Stair::initPixmap()
   case stair_basic:
     setPixmap(QPixmap("./dataset/images/stair-basic.png").scaled(STAIR_WIDTH, STAIR_HEIGHT));
     break;
-  case stair_blue:
+  case stair_moving:
     setPixmap(QPixmap("./dataset/images/stair-blue.png").scaled(STAIR_WIDTH, STAIR_HEIGHT));
     break;
   case stair_broken:
     setPixmap(QPixmap("./dataset/images/stair-broken1.png").scaled(STAIR_WIDTH, STAIR_HEIGHT));
     break;
-  case NUM_OF_STAIR_TYPE:
+  default:
     break;
   }
+}
+
+StairType Stair::get_stairtype()
+{
+  return stair_type;
+}
+void Stair::change_stair_type(StairType new_type)
+{
+  stair_type = new_type;
 }
 
 int Stair::width()
@@ -51,6 +61,15 @@ int Stair::height()
 void Stair::fall(int fall_speed)
 {
   setPos(x(), y() + fall_speed);
+}
+void Stair::left(int left_speed)
+{
+  setPos(x() - left_speed, y());
+}
+
+void Stair::right(int right_speed)
+{
+  setPos(x() + right_speed, y());
 }
 
 bool Stair::isOutOfScreen()
@@ -83,8 +102,66 @@ StairType Stair::decide_stair_type(Score *score)
     return (StairType)(rand() % 3);
   else if (score->getScore() > UNLOCK_MOVING_PLATFORM) // score > 6000
     return (StairType)(rand() % 2);
-  else //
+  else // NUM_OF_STAIR_TYPE
     return (StairType)0;
+}
+
+void Stair::stair_action()
+{
+  if (stair_type == stair_moving)
+    moving();
+  else if (stair_type == stair_disappear)
+    disappearing();
+}
+
+void Stair::moving()
+{
+  // moving
+  if (moving_direction == LEFT)
+    left();
+  else if (moving_direction == RIGHT)
+    right();
+  // out of boundary, change direction
+  if ((x() > SCREEN_WIDTH - STAIR_WIDTH) || (x() > initial_pos_x + stair_moving_pixel / 2)) // right->left
+  {
+    left(STAIR_MOVING_SPEED * 2);
+    moving_direction = LEFT;
+  }
+  else if ((x() < 0) || (x() < initial_pos_x - stair_moving_pixel / 2)) // left->right
+  {
+    right(STAIR_MOVING_SPEED * 2);
+    moving_direction = RIGHT;
+  }
+}
+void Stair::disappearing()
+{
+
+  if (disappear_stage == 0) // change stair type
+  {
+    // stair_type = stair_disappear;
+  }
+  else if (disappear_stage == 2)
+  {
+    setPixmap(QPixmap("./dataset/images/stair-broken2.png").scaled(STAIR_BROKEN2_WIDTH, STAIR_BROKEN2_HEIGHT));
+    fall(2);
+  }
+  else if (disappear_stage == 3)
+  {
+    setPixmap(QPixmap("./dataset/images/stair-broken3.png").scaled(STAIR_BROKEN3_WIDTH, STAIR_BROKEN3_HEIGHT));
+    fall(2);
+  }
+  else if (disappear_stage == 4)
+  {
+    setPixmap(QPixmap("./dataset/images/stair-broken4.png").scaled(STAIR_BROKEN4_WIDTH, STAIR_BROKEN4_HEIGHT));
+    fall(2);
+  }
+  else
+  {
+    fall(stair_fall_speed);
+    stair_fall_speed += STAIR_FALLING_ACCELERATION;
+  }
+  // disappear_stag + 1
+  disappear_stage++;
 }
 
 /*
