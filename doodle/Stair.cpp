@@ -7,15 +7,16 @@
 #include "Game.h"
 #include "Parameter.h"
 #include "Health.h"
+#include <iostream>
 
 extern Game *game;
 
 Stair::Stair(Score *score, QGraphicsItem *parent) : QObject(), QGraphicsPixmapItem(parent)
 {
-  // decide initial position
+  // decide stair type and initial position
   initial_pos_x = rand() % (SCREEN_WIDTH - STAIR_WIDTH);
-
   stair_type = decide_stair_type(score); // decide stair type
+  // QT object setting
   setPos(initial_pos_x, 0);
   setZValue(STAIR_ITEM_ORDER);
   initPixmap();
@@ -34,6 +35,8 @@ void Stair::initPixmap()
   case stair_broken:
     setPixmap(QPixmap("./dataset/images/stair-broken1.png").scaled(STAIR_WIDTH, STAIR_HEIGHT));
     break;
+  case stair_disappear:
+    setPixmap(QPixmap("./dataset/images/stair-disapear.png").scaled(STAIR_WIDTH, STAIR_HEIGHT));
   default:
     break;
   }
@@ -83,7 +86,7 @@ int Stair::pos_Left()
 }
 int Stair::pos_Right()
 {
-  return x() + STAIR_WIDTH;
+  return x() + width();
 }
 int Stair::pos_Up()
 {
@@ -91,27 +94,40 @@ int Stair::pos_Up()
 }
 int Stair::pos_Down()
 {
-  return y() + STAIR_HEIGHT;
+  return y() + height();
 }
 
 StairType Stair::decide_stair_type(Score *score)
 {
-  if (score == nullptr)
+
+  if (rand() % 100 > STAIR_RATE)
+  {
     return (StairType)0;
-  else if (score->getScore() > UNLOCK_DISAPPEARING_PLATFORM) // score > 9000
-    return (StairType)(rand() % 3);
-  else if (score->getScore() > UNLOCK_MOVING_PLATFORM) // score > 6000
-    return (StairType)(rand() % 2);
-  else // NUM_OF_STAIR_TYPE
-    return (StairType)0;
+  }
+  else
+  {
+    if (score == nullptr)
+      return (StairType)0;
+    else if (score->getScore() > UNLOCK_DISAPPEARING_PLATFORM) // score > 9000
+      return (StairType)(rand() % 4);
+    else if (score->getScore() > UNLOCK_MOVING_PLATFORM) // score > 6000
+      return (StairType)(rand() % 3);
+    else // NUM_OF_STAIR_TYPE
+      return (StairType)0;
+  }
 }
 
 void Stair::stair_action()
 {
   if (stair_type == stair_moving)
     moving();
-  else if (stair_type == stair_disappear)
-    disappearing();
+  else if ((stair_type == stair_delete) && (isdisappear == true)) // disappear_stair
+  {
+    fall(SCREEN_HEIGHT);
+    ;
+  }                                                            // let disappear fall and out of boundary
+  else if ((stair_type == stair_delete) && (isbroken == true)) // broken_stair aftertouch and broken
+    breaking();                                                // call breaking and do breaking action
 }
 
 void Stair::moving()
@@ -133,24 +149,24 @@ void Stair::moving()
     moving_direction = RIGHT;
   }
 }
-void Stair::disappearing()
+void Stair::breaking()
 {
 
-  if (disappear_stage == 0) // change stair type
+  if (broken_stage == 0) // change stair type
   {
     // stair_type = stair_disappear;
   }
-  else if (disappear_stage == 2)
+  else if (broken_stage == 2)
   {
     setPixmap(QPixmap("./dataset/images/stair-broken2.png").scaled(STAIR_BROKEN2_WIDTH, STAIR_BROKEN2_HEIGHT));
     fall(2);
   }
-  else if (disappear_stage == 3)
+  else if (broken_stage == 3)
   {
     setPixmap(QPixmap("./dataset/images/stair-broken3.png").scaled(STAIR_BROKEN3_WIDTH, STAIR_BROKEN3_HEIGHT));
     fall(2);
   }
-  else if (disappear_stage == 4)
+  else if (broken_stage == 4)
   {
     setPixmap(QPixmap("./dataset/images/stair-broken4.png").scaled(STAIR_BROKEN4_WIDTH, STAIR_BROKEN4_HEIGHT));
     fall(2);
@@ -161,7 +177,7 @@ void Stair::disappearing()
     stair_fall_speed += STAIR_FALLING_ACCELERATION;
   }
   // disappear_stag + 1
-  disappear_stage++;
+  broken_stage++;
 }
 
 /*

@@ -16,17 +16,17 @@
 #define SPRING_WIDTH 40
 #define SPRING_HEIGHT 25
 
-#define trampoline_width 72
-#define trampoline_height 36
+#define TRAMPOLINE_WIDTH 72
+#define TRAMPOLINE_HEIGHT 36
 
-#define propeller_hat_width 64
-#define propeller_hat_height 40
+#define PROPELLER_HAT_WIDTH 64
+#define PROPELLER_HAT_HEIGHT 40
 
-#define jet_pack_width 50
-#define jet_pack_height 72
+#define JET_PACK_WIDTH 50
+#define JET_PACK_HEIGHT 72
 
-#define bullet_width 20
-#define bullet_height 
+#define BULLET_WIDTH 20
+#define BULLET_HEIGHT 20
 
 
 
@@ -39,9 +39,9 @@
 #define PROPELLER_HAT_FLY 3840
 #define JETPACK_FLY 7680
 
-#define MAX_STAIR_INTERVAL 200
-#define MIN_STAIR_INTERVAL 60
-
+#define MAX_STAIR_INTERVAL 150  //200
+#define MIN_STAIR_INTERVAL 60   //60
+  
 #define FLY 3
 #define JUMP 2
 #define RISE 1
@@ -53,10 +53,10 @@
 
 
 //unlock_score
-# define unlock_spring_score 3000
-# define unlock_trampoline_score 6000
-# define unlock_propeller_hat_score 9000
-# define unlock_jet_pack_score 12000
+# define UNLOCK_SPRING_SCORE 3000
+# define UNLOCK_TRAMPOLINE_SCORE 6000
+# define UNLOCK_PROPELLER_HAT_SCORE 9000
+# define UNLOCK_JET_PACK_SCORE 12000
 
 # define UNLOCK_MOVING_PLATFORM 600 //6000
 # define UNLOCK_DISAPPEARING_PLATFORM 900 //9000
@@ -82,7 +82,10 @@
 #define MIN_STAIR_MOVING_PIXEL 40
 
 #define STAIR_FALLING_ACCELERATION 4
+#define STAIR_RATE 35
 
+// item setting
+#define ITEM_RATE 10
 
 //default setting
 # define DEFAULT_HEALTH 3
@@ -94,6 +97,7 @@
 
 #define SCORE_POSITION_X 20
 #define SCORE_POSITION_Y 20
+
 
 
 
@@ -109,10 +113,21 @@ enum ITEM_ORDER {
 enum StairType
 {
     stair_basic,
-    stair_moving,
     stair_broken,
+    stair_moving,
+    stair_disappear,
     NUM_OF_STAIR_TYPE, // This value is intented to keep the number of elements in this enum.
-    stair_disappear
+    stair_delete
+};
+
+enum ItemType
+{
+    spring,
+    trampoline,
+    propeller_hat,
+    jet_pack,
+    NUM_OF_Item_TYPE, // This value is intented to keep the number of elements in this enum.
+    item_delete,
 };
 
 

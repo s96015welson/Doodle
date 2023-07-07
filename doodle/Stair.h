@@ -35,9 +35,10 @@ public:
     // stair moving/disappearing action
     void stair_action();
     void moving();
-    void disappearing();
-
-
+    void breaking();
+    bool isbroken = false;
+    bool isdisappear = false;
+    
 private:
     void initPixmap();
     int decide_type(int);
@@ -51,9 +52,8 @@ private:
     int stair_moving_pixel = MIN_STAIR_MOVING_PIXEL + rand() % (MAX_STAIR_MOVING_PIXEL - MIN_STAIR_MOVING_PIXEL);
     int initial_pos_x;
     //disappear stair parameter
-    int disappear_stage = 0;
     int stair_fall_speed = STAIR_FALLING_SPEED;
-
+    int broken_stage = 0;
     // void normalStairEffect(Player *player,Health *health);
     // void spikeStairEffect(Player *player, Health *health);
 };

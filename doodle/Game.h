@@ -12,6 +12,7 @@
 #include "Score.h"
 #include "Health.h"
 #include "Stair.h"
+#include "ItemOnStair.h"
 
 class Game: public QGraphicsView{
     Q_OBJECT
@@ -24,7 +25,7 @@ public:
     Score *score = nullptr;
     Health *health = nullptr;
     std::deque<Stair*> stairs;//use a queue to store all the stairs; front->high / back->low
-
+    std::deque<ItemOnStair*> items;//use a queue to store all the items; front->high / back->low
 
     int key = NO_LR;
     int elapsed_frames = 0;
@@ -42,10 +43,12 @@ private:
     void reset();
     void registerUpdatingCallback();
     Stair* getWherePlayerStandingOn(Player *player);
-    void updatingStairs();
+    void updatingStairsandItems();
     void scrollScreen(int);
 
-    //int time;
+    void addItem(Stair *stair);
+
+    //int time
     int timerID;
     QImage img;
 };

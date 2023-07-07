@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include "Stair.h"
 #include "Parameter.h"
+#include "ItemOnStair.h"
 
 Game::Game(QWidget *parent)
 {
@@ -97,6 +98,16 @@ void Game::reset()
         }
         stairs.clear();
     }
+    // RESET ITEM
+    if (!items.empty())
+    {
+        for (ItemOnStair *item : items)
+        {
+            scene->removeItem(item);
+            delete item;
+        }
+        items.clear();
+    }
 }
 
 void Game::keyPressEvent(QKeyEvent *event)
@@ -171,8 +182,8 @@ void Game::updating()
     if (player->move_action == FALL)
         touch_stair = getWherePlayerStandingOn(player);
 
-    if ((touch_stair != nullptr) && (touch_stair->get_stairtype() == stair_broken))
-        touch_stair->change_stair_type(stair_disappear);
+    // if ((touch_stair != nullptr) && (touch_stair->get_stairtype() == stair_broken))
+    //     touch_stair->change_stair_type(stair_disappear);
 
     // player rises or falls ?
     if (player->move_action == RISE)
@@ -203,7 +214,7 @@ void Game::updating()
         std::cout << "die\n";
 
     // remove, generate and rise stairs
-    updatingStairs();
+    updatingStairsandItems();
     elapsed_frames++;
 }
 
@@ -217,24 +228,39 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
             if (((player->pos_Left() > stair->pos_Left() && player->pos_Left() < stair->pos_Right()) ||
                  (player->pos_Right() > stair->pos_Left() && player->pos_Right() < stair->pos_Right())) &&
                 (player->pos_Down() < stair->pos_Down() && player->pos_Down() > stair->pos_Up()) &&
-                (stair->get_stairtype() != stair_disappear))
+                (stair->get_stairtype() != stair_delete))
             {
                 // touch stair
-                player->move_action = RISE;
-                player->UP_times = BASIC_JUMP / PLAYER_RISING_SPEED;
-                return stair;
+                if (stair->get_stairtype() == stair_broken)
+                {
+                    stair->change_stair_type(stair_delete);
+                    stair->isbroken = true;
+                    // std::cout << stair->get_stairtype() << std::endl;
+                    return stair;
+                }
+                if (stair->get_stairtype() == stair_disappear)
+                {
+                    stair->change_stair_type(stair_delete);
+                    stair->isdisappear = true;
+                }
+                if (stair->get_stairtype() != stair_broken) // rise if touch stairs excluded stair_broken()
+                {
+                    player->move_action = RISE;
+                    player->UP_times = BASIC_JUMP / PLAYER_RISING_SPEED;
+                    return stair;
+                }
             }
         }
     return nullptr;
 }
 
-void Game::updatingStairs()
+void Game::updatingStairsandItems()
 {
-    //   stair5  <-back
+    //   stair5 <-back
     //   stair4
     //   stair3
     //   stair2
-    //   stair1  <-front
+    //   stair1 <-front
 
     // remove stairs that lower than upper bound of screen
     Stair *lowest_stair = (stairs.size() > 0) ? stairs.front() : nullptr;
@@ -245,24 +271,27 @@ void Game::updatingStairs()
         stairs.pop_front();              // delete stair from queue
     }
 
+    ItemOnStair *lowest_item = (items.size() > 0) ? items.front() : nullptr;
+    if (lowest_item != nullptr && lowest_item->isOutOfScreen())
+    {
+
+        scene->removeItem(lowest_item); // remove item from scene
+        delete lowest_item;             // delete stair object
+        items.pop_front();              // delete stair from queue
+    }
+
     // moving/disappearing stairs action
     for (Stair *stair : stairs)
         stair->stair_action();
+    for (ItemOnStair *item : items)
+        item->item_action();
 
-    // add new stair
+    // add new stairn and item
     static int stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
 
     Stair *highest_stair = (stairs.size() > 0) ? stairs.back() : nullptr;
-    if (highest_stair != nullptr && highest_stair->y() > stair_interval) // add new stair
-    {
-        // add new stair
-        Stair *stair = new Stair(score);
-        stairs.push_back(stair);
-        scene->addItem(stair);
-        // rand stair_interval
-        stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
-    }
-    else if (highest_stair == nullptr) // initial stairs
+
+    if (highest_stair == nullptr) // initial stairs
     {
         for (int y = SCREEN_HEIGHT - 100; y > 0; y -= MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL)))
         {
@@ -274,6 +303,20 @@ void Game::updatingStairs()
             stair->fall(y);
         }
     }
+    else if (highest_stair != nullptr && highest_stair->y() > stair_interval) // add new stair
+    {
+        // add new stair
+        Stair *stair = new Stair(score);
+        stairs.push_back(stair);
+        scene->addItem(stair);
+        // rand stair_interval
+        if(stair->get_stairtype()==stair_broken)
+            stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL))*0.3;
+        else
+            stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
+        // add item
+        addItem(stair);
+    }
 }
 
 void Game::scrollScreen(int scrollPixel)
@@ -282,6 +325,22 @@ void Game::scrollScreen(int scrollPixel)
     for (Stair *stair : stairs)
         stair->fall(scrollPixel);
 
+    // renew the position of all the items
+    for (ItemOnStair *item : items)
+        item->fall(scrollPixel);
+
     // renew doodle position
     player->fall(scrollPixel);
+}
+
+void Game::addItem(Stair *stair)
+{
+    if (score->getScore() > UNLOCK_SPRING_SCORE && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic || stair->get_stairtype() == stair_moving))
+    {
+        // add new item
+        ItemOnStair *item = new ItemOnStair(score, stair);
+
+        items.push_back(item);
+        scene->addItem(item);
+    }
 }
