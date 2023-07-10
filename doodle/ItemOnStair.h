@@ -18,6 +18,7 @@ public:
     bool isOutOfScreen();
 
     //item moving
+    void rise(int rise_speed = 0);
     void fall(int fall_speed = STAIR_FALLING_SPEED);
     void left(int left_speed = STAIR_MOVING_SPEED);
     void right(int right_speed = STAIR_MOVING_SPEED);
@@ -36,6 +37,9 @@ public:
 
     //item move
     void item_action();
+
+    //change item_image
+    void change_item_image(int new_item = DONT_CARE,int now_item = DONT_CARE);
 
 
 private:

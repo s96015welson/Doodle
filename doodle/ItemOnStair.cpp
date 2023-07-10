@@ -125,6 +125,10 @@ int ItemOnStair::height()
     return 0;
 }
 
+void ItemOnStair::rise(int rise_speed)
+{
+    setPos(x(), y() - rise_speed);
+}
 void ItemOnStair::fall(int fall_speed)
 {
     setPos(x(), y() + fall_speed);
@@ -154,4 +158,17 @@ int ItemOnStair::pos_Up()
 int ItemOnStair::pos_Down()
 {
     return y() + height();
+}
+
+void ItemOnStair::change_item_image(int new_item, int now_item)
+{
+    if (new_item == SPRING2)
+    {
+        rise(SPRING2_HEIGHT - SPRING_HEIGHT);
+        setPixmap(QPixmap("./dataset/images/item-spring2.png").scaled(SPRING2_WIDTH, SPRING2_HEIGHT));
+    }
+    if (new_item == TRAMPOLINE3)
+    {
+        setPixmap(QPixmap("./dataset/images/item-trampoline3.png").scaled(width(), height()));
+    }
 }

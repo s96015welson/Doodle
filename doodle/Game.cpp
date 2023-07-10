@@ -153,39 +153,16 @@ void Game::updating()
         return;
 
     // player move left or right?
-    if (key == LEFT)
-    {
-        key = NO_LR;
-        player->move_action_LR = LEFT;
-        player->LR_times = LR_DISTANCE / PLAYER_MOVING_SPEED;
-    }
-    else if (key == RIGHT)
-    {
-        key = NO_LR;
-        player->move_action_LR = RIGHT;
-        player->LR_times = LR_DISTANCE / PLAYER_MOVING_SPEED;
-    }
-    if (player->LR_times > 0)
-    {
-        player->LR_times--;
-        // doddle move left/right
-        if (player->move_action_LR == LEFT)
-            player->moveLeft();
-        else if (player->move_action_LR == RIGHT)
-            player->moveRight();
-        else if (player->LR_times == 0)
-            player->move_action_LR = NO_LR;
-    }
+    player->player_do_LR_action(key);
 
     // Get where doodle stand or touch
     Stair *touch_stair;
     if (player->move_action == FALL)
         touch_stair = getWherePlayerStandingOn(player);
 
-    // if ((touch_stair != nullptr) && (touch_stair->get_stairtype() == stair_broken))
-    //     touch_stair->change_stair_type(stair_disappear);
-
     // player rises or falls ?
+    player->player_do_UPDOWN_action();
+    /*
     if (player->move_action == RISE)
     {
         if (player->UP_times > 0)
@@ -198,29 +175,88 @@ void Game::updating()
     }
     else if (player->move_action == FALL)
         player->fall();
-
+    */
     // scroll screen
     int scrollPixel = (SCREEN_HEIGHT / 2) - player->pos_Down();
     if (scrollPixel > 0)
         scrollScreen(scrollPixel);
 
     // increase score
-
     if (scrollPixel > 0)
         score->increase(scrollPixel);
 
     // player die?
     if (player->die() == true)
-        std::cout << "die\n";
+    {
+        // std::cout << "die\n";
+    }
 
     // remove, generate and rise stairs
     updatingStairsandItems();
-    elapsed_frames++;
+    // elapsed_frames++;
+    //
+    if (items.size() > 0)
+    {
+        std::cout << "size:" << items.size() << "-->";
+        for (ItemOnStair *item : items)
+        {
+            std::cout << item->get_itemtype() << " ";
+        }
+        std::cout << "\n";
+    }
 }
 
 Stair *Game::getWherePlayerStandingOn(Player *player)
 {
     if (player->move_action == FALL)
+    {
+        // touch item
+        for (ItemOnStair *item : items)
+        {
+            if (((player->pos_Left() > item->pos_Left() && player->pos_Left() < item->pos_Right()) ||
+                 (player->pos_Left() + 40 > item->pos_Left() && player->pos_Left() + 40 < item->pos_Right()) ||
+                 (player->pos_Right() > item->pos_Left() && player->pos_Right() < item->pos_Right())) &&
+                (player->pos_Down() < item->pos_Down() && player->pos_Down() > item->pos_Up()) &&
+                (item->get_itemtype() != item_delete))
+            {
+                if (item->get_itemtype() == spring) // sdpring
+                {
+                    player->move_action = JUMP;
+                    player->UP_times = PLAYER_SPRING_JUMPING_TIMES;
+                    player->jumping_speed = PLAYER_SPRING_JUMPING_SPEED;
+                    item->change_item_image(SPRING2);
+                }
+
+                else if (item->get_itemtype() == trampoline) // trampoline
+                {
+                    player->move_action = JUMP;
+                    player->UP_times = PLAYER_TRAMPOLINE_JUMPING_TIMES;
+                    player->jumping_speed = PLAYER_TRAMPOLINE_JUMPING_SPEED;
+                    item->change_item_image(TRAMPOLINE3);
+                }
+
+                else if (item->get_itemtype() == propeller_hat) // propeller hat
+                {
+                    player->move_action = FLY;
+                    player->UP_times = PLAYER_PROPELLER_HAT_FLYING_TIMES;
+                    player->flying_speed = PLAYER_PROPELLER_HAT_FLYING__SPEED;
+                }
+
+                else if (item->get_itemtype() == jet_pack) // jet pack
+                {
+                    player->move_action = FLY;
+                    player->UP_times = PLAYER_JETPACK_FLYING_TIMES;
+                    player->flying_speed = PLAYER_JETPACK_FLYING__SPEED;
+                }
+
+                item->change_item_type(item_delete);
+                // item->fall(SCREEN_HEIGHT);
+
+                return nullptr;
+            }
+        }
+
+        // touch stair
         for (Stair *stair : stairs)
         {
 
@@ -246,11 +282,14 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                 if (stair->get_stairtype() != stair_broken) // rise if touch stairs excluded stair_broken()
                 {
                     player->move_action = RISE;
-                    player->UP_times = BASIC_JUMP / PLAYER_RISING_SPEED;
+                    player->UP_times = PLAYER_RISING_TIMES;
+                    player->change_player_image(DOODLE_RISE);
                     return stair;
                 }
             }
         }
+    }
+
     return nullptr;
 }
 
@@ -310,8 +349,8 @@ void Game::updatingStairsandItems()
         stairs.push_back(stair);
         scene->addItem(stair);
         // rand stair_interval
-        if(stair->get_stairtype()==stair_broken)
-            stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL))*0.3;
+        if (stair->get_stairtype() == stair_broken)
+            stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL)) * 0.3;
         else
             stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
         // add item
