@@ -17,7 +17,7 @@ public:
     void moveLeft();
     void moveRight();
 
-    //action
+    // action
     int fall_speed = 0;
     int rising_speed = PLAYER_RISING_SPEED;
     int jumping_speed = PLAYER_JUMPING_SPEED;
@@ -29,7 +29,7 @@ public:
 
     bool die();
 
-    //position
+    // position
     int width();
     int height();
 
@@ -38,21 +38,23 @@ public:
     int pos_Up();
     int pos_Down();
 
-    //action parameter
+    // action parameter
     int move_action = FALL;
     int move_action_LR = NO_LR;
     int LR_times = 0;
     int UP_times = 0;
 
-    //plyer do action
+    // plyer do action
     void player_do_LR_action(int &key);
     void player_do_UPDOWN_action();
 
-    //change_doodle_image
+    // change_doodle_image
     int doodle_image = DOODLEUL;
     void change_player_image(int new_palyer_image);
+    void update_image();
+
+private:
     void set_image(int new_palyer_image);
-    
 };
 
 #endif // PLAYER_H

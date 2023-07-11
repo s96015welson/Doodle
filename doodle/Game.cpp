@@ -122,29 +122,7 @@ void Game::keyPressEvent(QKeyEvent *event)
         key = RIGHT;
     }
 }
-/*
-void Game::keyReleaseEvent(QKeyEvent * event)
-{
 
-    if  (event->key() == Qt::Key_Left && key == Qt::Key_Left && event->isAutoRepeat() == false)
-        key = Qt::Key_No;
-    else if(event->key() == Qt::Key_Right && key == Qt::Key_Right && event->isAutoRepeat() == false)
-        key = Qt::Key_No;
-    else if(event->key() == Qt::Key_X && key2 == Qt::Key_X && event->isAutoRepeat() == false)
-        key2 = Qt::Key_No;
-    else if(event->key() == Qt::Key_Z && key2 == Qt::Key_Z && event->isAutoRepeat() == false)
-        key2 = Qt::Key_No;
-
-}
-
-static void ShowMsg(const char *str)
-{
-    QMessageBox msgBox;
-    msgBox.setText(str);
-    msgBox.exec();
-}
-*/
-// We use the name `updating` in case of method name collision.
 void Game::updating()
 {
 
@@ -162,20 +140,7 @@ void Game::updating()
 
     // player rises or falls ?
     player->player_do_UPDOWN_action();
-    /*
-    if (player->move_action == RISE)
-    {
-        if (player->UP_times > 0)
-        {
-            player->UP_times--;
-            player->rise();
-        }
-        else if (player->UP_times == 0)
-            player->move_action = FALL;
-    }
-    else if (player->move_action == FALL)
-        player->fall();
-    */
+
     // scroll screen
     int scrollPixel = (SCREEN_HEIGHT / 2) - player->pos_Down();
     if (scrollPixel > 0)
@@ -193,17 +158,11 @@ void Game::updating()
 
     // remove, generate and rise stairs
     updatingStairsandItems();
+
+    // update doodle image
+    player->update_image();
     // elapsed_frames++;
     //
-    if (items.size() > 0)
-    {
-        std::cout << "size:" << items.size() << "-->";
-        for (ItemOnStair *item : items)
-        {
-            std::cout << item->get_itemtype() << " ";
-        }
-        std::cout << "\n";
-    }
 }
 
 Stair *Game::getWherePlayerStandingOn(Player *player)
@@ -240,6 +199,8 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     player->move_action = FLY;
                     player->UP_times = PLAYER_PROPELLER_HAT_FLYING_TIMES;
                     player->flying_speed = PLAYER_PROPELLER_HAT_FLYING__SPEED;
+                    item->fall(SCREEN_HEIGHT);
+                    player->change_player_image(DOODLEH1);
                 }
 
                 else if (item->get_itemtype() == jet_pack) // jet pack
@@ -247,6 +208,8 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     player->move_action = FLY;
                     player->UP_times = PLAYER_JETPACK_FLYING_TIMES;
                     player->flying_speed = PLAYER_JETPACK_FLYING__SPEED;
+                    item->fall(SCREEN_HEIGHT);
+                    player->change_player_image(DOODLEJ1);
                 }
 
                 item->change_item_type(item_delete);
@@ -345,7 +308,7 @@ void Game::updatingStairsandItems()
     else if (highest_stair != nullptr && highest_stair->y() > stair_interval) // add new stair
     {
         // add new stair
-        Stair *stair = new Stair(score);
+        Stair *stair = new Stair(score, highest_stair);
         stairs.push_back(stair);
         scene->addItem(stair);
         // rand stair_interval
@@ -355,6 +318,9 @@ void Game::updatingStairsandItems()
             stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
         // add item
         addItem(stair);
+        //
+        if (player->move_action == FLY)
+            stair_interval = MIN_STAIR_INTERVAL + (stair_interval - MIN_STAIR_INTERVAL) * 0.8;
     }
 }
 

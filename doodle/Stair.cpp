@@ -11,11 +11,11 @@
 
 extern Game *game;
 
-Stair::Stair(Score *score, QGraphicsItem *parent) : QObject(), QGraphicsPixmapItem(parent)
+Stair::Stair(Score *score, Stair *last_stair, QGraphicsItem *parent) : QObject(), QGraphicsPixmapItem(parent)
 {
   // decide stair type and initial position
   initial_pos_x = rand() % (SCREEN_WIDTH - STAIR_WIDTH);
-  stair_type = decide_stair_type(score); // decide stair type
+  stair_type = decide_stair_type(score, last_stair); // decide stair type
   // QT object setting
   setPos(initial_pos_x, 0);
   setZValue(STAIR_ITEM_ORDER);
@@ -97,23 +97,29 @@ int Stair::pos_Down()
   return y() + height();
 }
 
-StairType Stair::decide_stair_type(Score *score)
+StairType Stair::decide_stair_type(Score *score, Stair *last_stair)
 {
+  static int last_broken_score = 0;
 
   if (rand() % 100 > STAIR_RATE)
   {
-    return (StairType)0;
+    return stair_basic;
   }
   else
   {
     if (score == nullptr)
-      return (StairType)0;
+      return stair_basic;
+    else if (score->getScore() > last_broken_score) // score > 9000
+    {
+      last_broken_score += 1000;
+      return stair_broken;
+    }
     else if (score->getScore() > UNLOCK_DISAPPEARING_PLATFORM) // score > 9000
-      return (StairType)(rand() % 4);
-    else if (score->getScore() > UNLOCK_MOVING_PLATFORM) // score > 6000
       return (StairType)(rand() % 3);
-    else // NUM_OF_STAIR_TYPE
-      return (StairType)0;
+    else if (score->getScore() > UNLOCK_MOVING_PLATFORM) // score > 6000
+      return (StairType)(rand() % 2);
+    else
+      return stair_basic;
   }
 }
 

@@ -35,7 +35,7 @@
 #define PROPELLER_HAT_FLY 3840
 #define JETPACK_FLY 7680
 
-#define MAX_STAIR_INTERVAL 150 // 200
+#define MAX_STAIR_INTERVAL 200 // 270
 #define MIN_STAIR_INTERVAL 60  // 60
 
 #define FLY 3
@@ -48,10 +48,10 @@
 #define NO_LR 10
 
 // unlock_score
-#define UNLOCK_SPRING_SCORE 3000        // 3000
-#define UNLOCK_TRAMPOLINE_SCORE 6000    // 6000
-#define UNLOCK_PROPELLER_HAT_SCORE 9000 // 9000
-#define UNLOCK_JET_PACK_SCORE 12000     // 12000
+#define UNLOCK_SPRING_SCORE 300        // 3000
+#define UNLOCK_TRAMPOLINE_SCORE 600    // 6000
+#define UNLOCK_PROPELLER_HAT_SCORE 900 // 9000
+#define UNLOCK_JET_PACK_SCORE 1200    // 12000
 
 #define UNLOCK_MOVING_PLATFORM 6000       // 6000
 #define UNLOCK_DISAPPEARING_PLATFORM 9000 // 9000
@@ -74,9 +74,9 @@
 
 #define PLAYER_FLYING_SPEED 45
 #define PLAYER_PROPELLER_HAT_FLYING__SPEED 50
-#define PLAYER_PROPELLER_HAT_FLYING_TIMES 35 + 10
+#define PLAYER_PROPELLER_HAT_FLYING_TIMES 70 + 10
 #define PLAYER_JETPACK_FLYING__SPEED 90
-#define PLAYER_JETPACK_FLYING_TIMES 40 + 10
+#define PLAYER_JETPACK_FLYING_TIMES 80 + 10
 #define PLAYER_FLY_SLOW_DOWN_RATE 0.8
 
 #define PLAYER_ACCELRATION 2
@@ -94,7 +94,6 @@
 
 // item setting
 #define ITEM_RATE 10
-
 
 // default setting
 #define DEFAULT_HEALTH 3
@@ -115,7 +114,7 @@
 #define TRAMPOLINE2 112
 #define TRAMPOLINE3 113
 
-//change doodle image code
+// change doodle image code
 #define DOODLE_RISE 0
 #define DOODLE_FALL 1
 #define DOODLEL 11
@@ -126,8 +125,16 @@
 #define DOODLEH2 22
 #define DOODLEH3 23
 #define DOODLEH4 24
-
-
+#define DOODLEJ1 31
+#define DOODLEJ2 32
+#define DOODLEJ3 33
+#define DOODLEJ4 34
+#define DOODLEJ5 35
+#define DOODLEJ6 36
+#define DOODLEJ7 37
+#define DOODLEJ8 38
+#define DOODLEJ9 39
+#define DOODLEJ10 40
 
 enum ITEM_ORDER
 {
@@ -142,9 +149,9 @@ enum ITEM_ORDER
 enum StairType
 {
     stair_basic,
-    stair_broken,
     stair_moving,
     stair_disappear,
+    stair_broken,
     NUM_OF_STAIR_TYPE, // This value is intented to keep the number of elements in this enum.
     stair_delete
 };
