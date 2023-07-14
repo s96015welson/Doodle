@@ -15,6 +15,7 @@
 #include "Stair.h"
 #include "Parameter.h"
 #include "ItemOnStair.h"
+#include "Monster.h"
 
 Game::Game(QWidget *parent)
 {
@@ -108,6 +109,12 @@ void Game::reset()
         }
         items.clear();
     }
+    // RESET MONSTER
+    if (monster)
+    {
+        scene->removeItem(monster);
+        delete monster;
+    }
 }
 
 void Game::keyPressEvent(QKeyEvent *event)
@@ -126,12 +133,11 @@ void Game::keyPressEvent(QKeyEvent *event)
 void Game::updating()
 {
 
-    // paurse?
-    if (key == Qt::Key_P)
-        return;
-
     // player move left or right?
     player->player_do_LR_action(key);
+
+    // touch monster?
+    touchMonster();
 
     // Get where doodle stand or touch
     Stair *touch_stair;
@@ -282,6 +288,12 @@ void Game::updatingStairsandItems()
         items.pop_front();              // delete stair from queue
     }
 
+    if (monster != nullptr && monster->isOutOfScreen())
+    {
+        scene->removeItem(monster);
+        monster = nullptr;
+    }
+
     // moving/disappearing stairs action
     for (Stair *stair : stairs)
         stair->stair_action();
@@ -316,8 +328,8 @@ void Game::updatingStairsandItems()
             stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL)) * 0.3;
         else
             stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
-        // add item
-        addItem(stair);
+        // add item or monster
+        stair_interval = addItem_and_monster(stair, stair_interval);
         //
         if (player->move_action == FLY)
             stair_interval = MIN_STAIR_INTERVAL + (stair_interval - MIN_STAIR_INTERVAL) * 0.8;
@@ -336,9 +348,12 @@ void Game::scrollScreen(int scrollPixel)
 
     // renew doodle position
     player->fall(scrollPixel);
+    // renew monster position
+    if (monster)
+        monster->fall(scrollPixel);
 }
 
-void Game::addItem(Stair *stair)
+int Game::addItem_and_monster(Stair *stair, int stair_interval)
 {
     if (score->getScore() > UNLOCK_SPRING_SCORE && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic || stair->get_stairtype() == stair_moving))
     {
@@ -347,5 +362,66 @@ void Game::addItem(Stair *stair)
 
         items.push_back(item);
         scene->addItem(item);
+        if (stair_interval < item->height())
+            stair_interval = item->height() * 1.1;
+    }
+    else if (score->getScore() > UNLOCK_MONSTER_SCORE && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic))
+    {
+        if (monster == nullptr)
+        {
+            monster = new Monster(stair);
+            scene->addItem(monster);
+            if (stair_interval < monster->height())
+                stair_interval = monster->height() * 1.1;
+        }
+    }
+
+    return stair_interval;
+}
+
+void Game::touchMonster()
+{
+    static bool lose_HP_cool_down = false;
+    if (monster)
+    {
+        if (player->move_action == FALL)
+        {
+            if (((player->pos_Left() > monster->pos_Left() && player->pos_Left() < monster->pos_Right()) ||
+                 (player->pos_Left() + 40 > monster->pos_Left() && player->pos_Left() + 40 < monster->pos_Right()) ||
+                 (player->pos_Right() > monster->pos_Left() && player->pos_Right() < monster->pos_Right())) &&
+                (player->pos_Down() < monster->pos_Up() + 30 && player->pos_Down() > monster->pos_Up()) &&
+                (monster->get_MonsterType() != monster_delete))
+            {
+                // doodle rise
+                player->move_action = RISE;
+                player->UP_times = PLAYER_RISING_TIMES;
+                player->change_player_image(DOODLE_RISE);
+                // monster
+                monster->change_monster_type(monster_delete);
+                monster->fall(SCREEN_HEIGHT);
+                return;
+            }
+        }
+        if (1)
+        {
+            if (((player->pos_Left() > monster->pos_Left() && player->pos_Left() < monster->pos_Right()) ||
+                 (player->pos_Left() + 40 > monster->pos_Left() && player->pos_Left() + 40 < monster->pos_Right()) ||
+                 (player->pos_Right() > monster->pos_Left() && player->pos_Right() < monster->pos_Right())) &&
+                ((player->pos_Up() > monster->pos_Up() && player->pos_Up() < monster->pos_Down()) ||
+                 (player->pos_Up() + 40 > monster->pos_Up() && player->pos_Up() + 40 < monster->pos_Down()) ||
+                 (player->pos_Down() > monster->pos_Up() && player->pos_Down() < monster->pos_Down())) &&
+                (monster->get_MonsterType() != monster_delete))
+            {
+                if (lose_HP_cool_down == false)
+                {
+                    health->decrease(1);
+                    lose_HP_cool_down = true;
+                }
+                    
+                
+            }
+            else
+                lose_HP_cool_down = false;
+        }
     }
 }

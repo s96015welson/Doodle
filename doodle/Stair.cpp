@@ -111,7 +111,7 @@ StairType Stair::decide_stair_type(Score *score, Stair *last_stair)
       return stair_basic;
     else if (score->getScore() > last_broken_score) // score > 9000
     {
-      last_broken_score += 1000;
+      last_broken_score = score->getScore() - (score->getScore() % 1000) + 1000;
       return stair_broken;
     }
     else if (score->getScore() > UNLOCK_DISAPPEARING_PLATFORM) // score > 9000
@@ -185,42 +185,3 @@ void Stair::breaking()
   // disappear_stag + 1
   broken_stage++;
 }
-
-/*
-void Stair::takeEffect(Player *player) {
-    switch(stair_type) {
-      case spike_stair:
-        spikeStairEffect(player,health); break;
-      case normal_stair:
-        normalStairEffect(player,health); break;
-      case left_roll_stair:
-        leftRollStairEffect(player,health); break;
-      case right_roll_stair:
-        rightRollStairEffect(player,health); break;
-    }
-    has_taken_effect = true;
-}
-
-
-void Stair::normalStairEffect(Player *player,Health *health) {
-  if (!has_taken_effect && game->health->getHealth() < DEFAULT_HEALTH)
-    game->health->increase(1);
-}
-
-void Stair::spikeStairEffect(Player *player,Health *health) {
-    if (!has_taken_effect)
-        health->decrease(5); // If the health is negative, updating() in Game.cpp will regard it as death
-}
-
-void Stair::leftRollStairEffect(Player *player,Health *health) {
-  game->player->setPos(game->player->x() - LEFT_ROLL_STAIR_SPEED,game->player->y());
-  if (!has_taken_effect && game->health->getHealth() < DEFAULT_HEALTH)
-    game->health->increase(1);
-}
-
-void Stair::rightRollStairEffect(Player *player,Health *health) {
-  game->player->setPos(game->player->x() + RIGHT_ROLL_STAIR_SPEED,game->player->y());
-  if (!has_taken_effect && game->health->getHealth() < DEFAULT_HEALTH)
-    game->health->increase(1);
-}
-*/

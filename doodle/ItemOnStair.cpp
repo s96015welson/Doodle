@@ -82,6 +82,7 @@ bool ItemOnStair::isOutOfScreen()
 
 ItemType ItemOnStair::get_itemtype()
 {
+    
     return item_type;
 }
 void ItemOnStair::change_item_type(ItemType new_type)

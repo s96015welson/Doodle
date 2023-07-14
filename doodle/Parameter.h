@@ -48,13 +48,15 @@
 #define NO_LR 10
 
 // unlock_score
-#define UNLOCK_SPRING_SCORE 300        // 3000
-#define UNLOCK_TRAMPOLINE_SCORE 600    // 6000
-#define UNLOCK_PROPELLER_HAT_SCORE 900 // 9000
-#define UNLOCK_JET_PACK_SCORE 1200    // 12000
+#define UNLOCK_SPRING_SCORE 3000        // 3000
+#define UNLOCK_TRAMPOLINE_SCORE 6000    // 6000
+#define UNLOCK_PROPELLER_HAT_SCORE 9000 // 9000
+#define UNLOCK_JET_PACK_SCORE 12000    // 12000
 
 #define UNLOCK_MOVING_PLATFORM 6000       // 6000
 #define UNLOCK_DISAPPEARING_PLATFORM 9000 // 9000
+
+#define UNLOCK_MONSTER_SCORE 2000
 
 // player setting
 #define PLAYER_START_POSITION_X 200
@@ -162,8 +164,18 @@ enum ItemType
     trampoline,
     propeller_hat,
     jet_pack,
-    NUM_OF_Item_TYPE, // This value is intented to keep the number of elements in this enum.
-    item_delete,
+    NUM_OF_ITEM_TYPE, // This value is intented to keep the number of elements in this enum.
+    item_delete
+};
+
+enum MonsterType
+{
+    type1,
+    type2,
+    type3,
+    type4,
+    NUM_OF_MONSTER_TYPE, // This value is intented to keep the number of elements in this enum.
+    monster_delete
 };
 
 // special image size
@@ -178,5 +190,17 @@ enum ItemType
 
 #define SPRING2_WIDTH 40
 #define SPRING2_HEIGHT 60
+
+//monster image size
+
+#define MONSTER_TYPE1_WIDTH 168
+#define MONSTER_TYPE1_HEIGHT 105
+#define MONSTER_TYPE2_WIDTH 128
+#define MONSTER_TYPE2_HEIGHT 178
+#define MONSTER_TYPE3_WIDTH 160
+#define MONSTER_TYPE3_HEIGHT 100
+#define MONSTER_TYPE4_WIDTH 160
+#define MONSTER_TYPE4_HEIGHT 90
+
 
 #endif // PARAMETER_H
