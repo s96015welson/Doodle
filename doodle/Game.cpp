@@ -16,6 +16,8 @@
 #include "Parameter.h"
 #include "ItemOnStair.h"
 #include "Monster.h"
+#include "Bullet.h"
+#include <string>
 
 Game::Game(QWidget *parent)
 {
@@ -36,6 +38,21 @@ void Game::registerUpdatingCallback()
     QTimer *timer = new QTimer(this);
     QObject::connect(timer, SIGNAL(timeout()), this, SLOT(updating()));
     timer->start(FRAME_DELAY);
+}
+void Game::ShowMsg()
+{
+    QMessageBox msgBox;
+    // QString final_score = ;
+
+    msgBox.setStyleSheet("QLabel{"
+                         "min-width:150px;"
+                         "min-height:50px;"
+                         "font-size:16px;"
+                         "}");
+    // char* info = ;
+
+    msgBox.setText("Game Over!");
+    msgBox.exec();
 }
 
 void Game::createScene()
@@ -109,11 +126,22 @@ void Game::reset()
         }
         items.clear();
     }
+    // RESET ITEM
+    if (!bullets.empty())
+    {
+        for (Bullet *bullet : bullets)
+        {
+            scene->removeItem(bullet);
+            delete bullet;
+        }
+        bullets.clear();
+    }
+
     // RESET MONSTER
     if (monster)
     {
         scene->removeItem(monster);
-        delete monster;
+        monster = nullptr;
     }
 }
 
@@ -129,9 +157,23 @@ void Game::keyPressEvent(QKeyEvent *event)
         key = RIGHT;
     }
 }
+void Game::mousePressEvent(QMouseEvent *event)
+{
+    addBullet = true;
+    targetX = event->x();
+    targetY = event->y();
+}
 
 void Game::updating()
 {
+    // player die?
+    if (player->outOfScreen() == true || health->getHealth() <= 0)
+    {
+        reset();
+        ShowMsg();
+
+        return;
+    }
 
     // player move left or right?
     player->player_do_LR_action(key);
@@ -141,11 +183,21 @@ void Game::updating()
 
     // Get where doodle stand or touch
     Stair *touch_stair;
-    if (player->move_action == FALL)
+    if (player->move_action == FALL || player->move_action == RISE)
         touch_stair = getWherePlayerStandingOn(player);
 
     // player rises or falls ?
     player->player_do_UPDOWN_action();
+
+    // add bullet
+
+    if (addBullet)
+    {
+        addBullet = false;
+        Bullet *bullet = new Bullet(player->x(), player->y(), targetX, targetY);
+        bullets.push_back(bullet);
+        scene->addItem(bullet);
+    }
 
     // scroll screen
     int scrollPixel = (SCREEN_HEIGHT / 2) - player->pos_Down();
@@ -155,12 +207,6 @@ void Game::updating()
     // increase score
     if (scrollPixel > 0)
         score->increase(scrollPixel);
-
-    // player die?
-    if (player->die() == true)
-    {
-        // std::cout << "die\n";
-    }
 
     // remove, generate and rise stairs
     updatingStairsandItems();
@@ -173,7 +219,7 @@ void Game::updating()
 
 Stair *Game::getWherePlayerStandingOn(Player *player)
 {
-    if (player->move_action == FALL)
+    if (player->move_action == FALL || player->move_action == RISE)
     {
         // touch item
         for (ItemOnStair *item : items)
@@ -181,26 +227,31 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
             if (((player->pos_Left() > item->pos_Left() && player->pos_Left() < item->pos_Right()) ||
                  (player->pos_Left() + 40 > item->pos_Left() && player->pos_Left() + 40 < item->pos_Right()) ||
                  (player->pos_Right() > item->pos_Left() && player->pos_Right() < item->pos_Right())) &&
-                (player->pos_Down() < item->pos_Down() && player->pos_Down() > item->pos_Up()) &&
-                (item->get_itemtype() != item_delete))
+                ((player->pos_Down() < item->pos_Down() && player->pos_Down() > item->pos_Up()) ||
+                 (player->pos_Up() + 40 < item->pos_Down() && player->pos_Up() + 40 > item->pos_Up()) ||
+                 (player->pos_Up() < item->pos_Down() && player->pos_Up() > item->pos_Up())) &&
+                (item->get_itemtype() != item_delete) && (player->move_action == FALL))
             {
-                if (item->get_itemtype() == spring) // sdpring
+                if (player->move_action == FALL)
                 {
-                    player->move_action = JUMP;
-                    player->UP_times = PLAYER_SPRING_JUMPING_TIMES;
-                    player->jumping_speed = PLAYER_SPRING_JUMPING_SPEED;
-                    item->change_item_image(SPRING2);
+                    if (item->get_itemtype() == spring) // sdpring
+                    {
+                        player->move_action = JUMP;
+                        player->UP_times = PLAYER_SPRING_JUMPING_TIMES;
+                        player->jumping_speed = PLAYER_SPRING_JUMPING_SPEED;
+                        item->change_item_image(SPRING2);
+                    }
+
+                    else if (item->get_itemtype() == trampoline) // trampoline
+                    {
+                        player->move_action = JUMP;
+                        player->UP_times = PLAYER_TRAMPOLINE_JUMPING_TIMES;
+                        player->jumping_speed = PLAYER_TRAMPOLINE_JUMPING_SPEED;
+                        item->change_item_image(TRAMPOLINE3);
+                    }
                 }
 
-                else if (item->get_itemtype() == trampoline) // trampoline
-                {
-                    player->move_action = JUMP;
-                    player->UP_times = PLAYER_TRAMPOLINE_JUMPING_TIMES;
-                    player->jumping_speed = PLAYER_TRAMPOLINE_JUMPING_SPEED;
-                    item->change_item_image(TRAMPOLINE3);
-                }
-
-                else if (item->get_itemtype() == propeller_hat) // propeller hat
+                if (item->get_itemtype() == propeller_hat) // propeller hat
                 {
                     player->move_action = FLY;
                     player->UP_times = PLAYER_PROPELLER_HAT_FLYING_TIMES;
@@ -224,7 +275,9 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                 return nullptr;
             }
         }
-
+    }
+    if (player->move_action == FALL)
+    {
         // touch stair
         for (Stair *stair : stairs)
         {
@@ -288,6 +341,15 @@ void Game::updatingStairsandItems()
         items.pop_front();              // delete stair from queue
     }
 
+    Bullet *first_bullet = (bullets.size() > 0) ? bullets.front() : nullptr;
+    if (first_bullet != nullptr && first_bullet->isOutOfScreen())
+    {
+
+        scene->removeItem(first_bullet); // remove item from scene
+        delete first_bullet;             // delete stair object
+        bullets.pop_front();             // delete stair from queue
+    }
+
     if (monster != nullptr && monster->isOutOfScreen())
     {
         scene->removeItem(monster);
@@ -295,10 +357,13 @@ void Game::updatingStairsandItems()
     }
 
     // moving/disappearing stairs action
-    for (Stair *stair : stairs)
+    for (Stair *stair : stairs) // do stair actions
         stair->stair_action();
-    for (ItemOnStair *item : items)
+    for (ItemOnStair *item : items) // do item actions
         item->item_action();
+
+    for (Bullet *bullet : bullets) // do bullet actions
+        bullet->bullet_action();
 
     // add new stairn and item
     static int stair_interval = MIN_STAIR_INTERVAL + (rand() % (MAX_STAIR_INTERVAL - MIN_STAIR_INTERVAL));
@@ -338,24 +403,28 @@ void Game::updatingStairsandItems()
 
 void Game::scrollScreen(int scrollPixel)
 {
-    // renew the position of all the stairs
+    // scroll  all the stairs
     for (Stair *stair : stairs)
         stair->fall(scrollPixel);
 
-    // renew the position of all the items
+    // scroll all the items
     for (ItemOnStair *item : items)
         item->fall(scrollPixel);
 
-    // renew doodle position
+    // scroll doodle position
     player->fall(scrollPixel);
-    // renew monster position
+    // scroll monster position
     if (monster)
         monster->fall(scrollPixel);
+
+    // scroll bullet position
+    for (Bullet *bullet : bullets)
+        bullet->fall(scrollPixel);
 }
 
 int Game::addItem_and_monster(Stair *stair, int stair_interval)
 {
-    if (score->getScore() > UNLOCK_SPRING_SCORE && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic || stair->get_stairtype() == stair_moving))
+    if (score->getScore() > UNLOCK_SPRING_SCORE && items.size() < 2 && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic || stair->get_stairtype() == stair_moving))
     {
         // add new item
         ItemOnStair *item = new ItemOnStair(score, stair);
@@ -365,14 +434,14 @@ int Game::addItem_and_monster(Stair *stair, int stair_interval)
         if (stair_interval < item->height())
             stair_interval = item->height() * 1.1;
     }
-    else if (score->getScore() > UNLOCK_MONSTER_SCORE && rand() % 100 < ITEM_RATE && (stair->get_stairtype() == stair_basic))
+    else if (score->getScore() > UNLOCK_MONSTER_SCORE && rand() % 100 < MONSTER_RATE && (stair->get_stairtype() == stair_basic))
     {
         if (monster == nullptr)
         {
             monster = new Monster(stair);
             scene->addItem(monster);
-            if (stair_interval < monster->height())
-                stair_interval = monster->height() * 1.1;
+            if (stair_interval < monster->height() * 1.1 + STAIR_HEIGHT)
+                stair_interval = monster->height() * 1.1 + STAIR_HEIGHT;
         }
     }
 
@@ -384,6 +453,20 @@ void Game::touchMonster()
     static bool lose_HP_cool_down = false;
     if (monster)
     {
+        // bullet touch monster and kill monster
+        for (Bullet *bullet : bullets)
+        {
+            if ((bullet->pos_Left() + 10 > monster->pos_Left() && bullet->pos_Left() + 10 < monster->pos_Right()) &&
+                (bullet->pos_Up() + 10 > monster->pos_Up() && bullet->pos_Up() + 10 < monster->pos_Down()) &&
+                (monster->get_MonsterType() != monster_delete))
+            {
+                // kill monster
+                monster->change_monster_type(monster_delete);
+                monster->fall(SCREEN_HEIGHT * 2);
+                // remove bullet
+            }
+        }
+        // doodle jump and kill monster
         if (player->move_action == FALL)
         {
             if (((player->pos_Left() > monster->pos_Left() && player->pos_Left() < monster->pos_Right()) ||
@@ -402,14 +485,16 @@ void Game::touchMonster()
                 return;
             }
         }
+        // doodle touch monster and minus HP
         if (1)
         {
-            if (((player->pos_Left() > monster->pos_Left() && player->pos_Left() < monster->pos_Right()) ||
-                 (player->pos_Left() + 40 > monster->pos_Left() && player->pos_Left() + 40 < monster->pos_Right()) ||
-                 (player->pos_Right() > monster->pos_Left() && player->pos_Right() < monster->pos_Right())) &&
-                ((player->pos_Up() > monster->pos_Up() && player->pos_Up() < monster->pos_Down()) ||
-                 (player->pos_Up() + 40 > monster->pos_Up() && player->pos_Up() + 40 < monster->pos_Down()) ||
-                 (player->pos_Down() > monster->pos_Up() && player->pos_Down() < monster->pos_Down())) &&
+            const int tolerance = 20;
+            if (((player->pos_Left() > monster->pos_Left() + tolerance && player->pos_Left() < monster->pos_Right() - tolerance) ||
+                 (player->pos_Left() + 40 > monster->pos_Left() + tolerance && player->pos_Left() + 40 < monster->pos_Right() - tolerance) ||
+                 (player->pos_Right() > monster->pos_Left() + tolerance && player->pos_Right() < monster->pos_Right() - tolerance)) &&
+                ((player->pos_Up() > monster->pos_Up() + tolerance && player->pos_Up() < monster->pos_Down() - tolerance) ||
+                 (player->pos_Up() + 40 > monster->pos_Up() + tolerance && player->pos_Up() + 40 < monster->pos_Down() - tolerance) ||
+                 (player->pos_Down() > monster->pos_Up() + tolerance && player->pos_Down() < monster->pos_Down() - tolerance)) &&
                 (monster->get_MonsterType() != monster_delete))
             {
                 if (lose_HP_cool_down == false)
@@ -417,8 +502,6 @@ void Game::touchMonster()
                     health->decrease(1);
                     lose_HP_cool_down = true;
                 }
-                    
-                
             }
             else
                 lose_HP_cool_down = false;

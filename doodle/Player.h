@@ -27,7 +27,7 @@ public:
     void jump(int jumping_speed = PLAYER_JUMPING_SPEED);
     void fly(int flying_speed = PLAYER_FLYING_SPEED);
 
-    bool die();
+    bool outOfScreen();
 
     // position
     int width();

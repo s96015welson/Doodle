@@ -62,7 +62,7 @@ void Monster::initPixmap()
 }
 bool Monster::isOutOfScreen()
 {
-    return (y() + height()) >= SCREEN_HEIGHT;
+    return (y() + height()*0.5) >= SCREEN_HEIGHT;
 }
 
 MonsterType Monster::get_MonsterType()

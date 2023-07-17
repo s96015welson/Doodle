@@ -50,19 +50,22 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = Game.cpp \
+SOURCES       = Bullet.cpp \
+		Game.cpp \
 		Health.cpp \
 		ItemOnStair.cpp \
 		main.cpp \
 		Monster.cpp \
 		Player.cpp \
 		Score.cpp \
-		Stair.cpp moc_Game.cpp \
+		Stair.cpp moc_Bullet.cpp \
+		moc_Game.cpp \
 		moc_ItemOnStair.cpp \
 		moc_Monster.cpp \
 		moc_Player.cpp \
 		moc_Stair.cpp
-OBJECTS       = Game.o \
+OBJECTS       = Bullet.o \
+		Game.o \
 		Health.o \
 		ItemOnStair.o \
 		main.o \
@@ -70,6 +73,7 @@ OBJECTS       = Game.o \
 		Player.o \
 		Score.o \
 		Stair.o \
+		moc_Bullet.o \
 		moc_Game.o \
 		moc_ItemOnStair.o \
 		moc_Monster.o \
@@ -157,14 +161,16 @@ DIST          = /usr/lib/qt5/mkspecs/features/spec_pre.prf \
 		/usr/lib/qt5/mkspecs/features/exceptions.prf \
 		/usr/lib/qt5/mkspecs/features/yacc.prf \
 		/usr/lib/qt5/mkspecs/features/lex.prf \
-		doodle.pro Game.h \
+		doodle.pro Bullet.h \
+		Game.h \
 		Health.h \
 		ItemOnStair.h \
 		Monster.h \
 		Parameter.h \
 		Player.h \
 		Score.h \
-		Stair.h Game.cpp \
+		Stair.h Bullet.cpp \
+		Game.cpp \
 		Health.cpp \
 		ItemOnStair.cpp \
 		main.cpp \
@@ -365,8 +371,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents /usr/lib/qt5/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents Game.h Health.h ItemOnStair.h Monster.h Parameter.h Player.h Score.h Stair.h $(DISTDIR)/
-	$(COPY_FILE) --parents Game.cpp Health.cpp ItemOnStair.cpp main.cpp Monster.cpp Player.cpp Score.cpp Stair.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents Bullet.h Game.h Health.h ItemOnStair.h Monster.h Parameter.h Player.h Score.h Stair.h $(DISTDIR)/
+	$(COPY_FILE) --parents Bullet.cpp Game.cpp Health.cpp ItemOnStair.cpp main.cpp Monster.cpp Player.cpp Score.cpp Stair.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -398,9 +404,17 @@ compiler_moc_predefs_clean:
 moc_predefs.h: /usr/lib/qt5/mkspecs/features/data/dummy.cpp
 	g++ -fno-keep-inline-dllexport -D_GNU_SOURCE -pipe -O2 -Wall -W -dM -E -o moc_predefs.h /usr/lib/qt5/mkspecs/features/data/dummy.cpp
 
-compiler_moc_header_make_all: moc_Game.cpp moc_ItemOnStair.cpp moc_Monster.cpp moc_Player.cpp moc_Stair.cpp
+compiler_moc_header_make_all: moc_Bullet.cpp moc_Game.cpp moc_ItemOnStair.cpp moc_Monster.cpp moc_Player.cpp moc_Stair.cpp
 compiler_moc_header_clean:
-	-$(DEL_FILE) moc_Game.cpp moc_ItemOnStair.cpp moc_Monster.cpp moc_Player.cpp moc_Stair.cpp
+	-$(DEL_FILE) moc_Bullet.cpp moc_Game.cpp moc_ItemOnStair.cpp moc_Monster.cpp moc_Player.cpp moc_Stair.cpp
+moc_Bullet.cpp: Player.h \
+		Parameter.h \
+		Score.h \
+		Bullet.h \
+		moc_predefs.h \
+		/usr/lib/qt5/bin/moc
+	/usr/lib/qt5/bin/moc $(DEFINES) --include ./moc_predefs.h -I/usr/lib/qt5/mkspecs/cygwin-g++ -I/home/s9601/doodle -I/home/s9601/doodle -I/usr/include/qt5 -I/usr/include/qt5/QtWidgets -I/usr/include/qt5/QtMultimedia -I/usr/include/qt5/QtGui -I/usr/include/qt5/QtNetwork -I/usr/include/qt5/QtCore -I/usr/lib/gcc/x86_64-pc-cygwin/11/include/c++ -I/usr/lib/gcc/x86_64-pc-cygwin/11/include/c++/x86_64-pc-cygwin -I/usr/lib/gcc/x86_64-pc-cygwin/11/include/c++/backward -I/usr/lib/gcc/x86_64-pc-cygwin/11/include -I/usr/include -I/usr/include/w32api Bullet.h -o moc_Bullet.cpp
+
 moc_Game.cpp: Player.h \
 		Parameter.h \
 		Score.h \
@@ -408,6 +422,7 @@ moc_Game.cpp: Player.h \
 		Stair.h \
 		ItemOnStair.h \
 		Monster.h \
+		Bullet.h \
 		Game.h \
 		moc_predefs.h \
 		/usr/lib/qt5/bin/moc
@@ -459,6 +474,17 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
+Bullet.o: Bullet.cpp Game.h \
+		Player.h \
+		Parameter.h \
+		Score.h \
+		Health.h \
+		Stair.h \
+		ItemOnStair.h \
+		Monster.h \
+		Bullet.h
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Bullet.o Bullet.cpp
+
 Game.o: Game.cpp Game.h \
 		Player.h \
 		Parameter.h \
@@ -466,7 +492,8 @@ Game.o: Game.cpp Game.h \
 		Health.h \
 		Stair.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Game.o Game.cpp
 
 Health.o: Health.cpp Health.h \
@@ -480,7 +507,8 @@ ItemOnStair.o: ItemOnStair.cpp Stair.h \
 		Game.h \
 		Health.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ItemOnStair.o ItemOnStair.cpp
 
 main.o: main.cpp Game.h \
@@ -490,7 +518,8 @@ main.o: main.cpp Game.h \
 		Health.h \
 		Stair.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 Monster.o: Monster.cpp Stair.h \
@@ -500,7 +529,8 @@ Monster.o: Monster.cpp Stair.h \
 		Game.h \
 		Health.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Monster.o Monster.cpp
 
 Player.o: Player.cpp Player.h \
@@ -510,7 +540,8 @@ Player.o: Player.cpp Player.h \
 		Game.h \
 		Health.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Player.o Player.cpp
 
 Score.o: Score.cpp Score.h \
@@ -524,8 +555,12 @@ Stair.o: Stair.cpp Stair.h \
 		Game.h \
 		Health.h \
 		ItemOnStair.h \
-		Monster.h
+		Monster.h \
+		Bullet.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o Stair.o Stair.cpp
+
+moc_Bullet.o: moc_Bullet.cpp 
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Bullet.o moc_Bullet.cpp
 
 moc_Game.o: moc_Game.cpp 
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o moc_Game.o moc_Game.cpp

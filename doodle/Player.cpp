@@ -52,7 +52,7 @@ void Player::fly(int flying_speed)
     setPos(x(), y() - flying_speed);
 }
 
-bool Player::die()
+bool Player::outOfScreen()
 {
     return (y() + height() * 0.5) >= SCREEN_HEIGHT;
 }
