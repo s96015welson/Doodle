@@ -30,13 +30,13 @@ ItemType ItemOnStair::decide_item_type(Score *score)
 {
     if (score == nullptr)
         return item_delete;
-    else if (score->getScore() > UNLOCK_JET_PACK_SCORE) // score > 9000
+    else if (score->getScore() > UNLOCK_JET_PACK_SCORE) // score > 12000
         return (ItemType)(rand() % 4);
-    else if (score->getScore() > UNLOCK_PROPELLER_HAT_SCORE) // score > 6000
+    else if (score->getScore() > UNLOCK_PROPELLER_HAT_SCORE) // score > 9000
         return (ItemType)(rand() % 3);
     else if (score->getScore() > UNLOCK_TRAMPOLINE_SCORE) // score > 6000
         return (ItemType)(rand() % 2);
-    else if (score->getScore() > UNLOCK_SPRING_SCORE) // score > 6000
+    else if (score->getScore() > UNLOCK_SPRING_SCORE) // score > 3000
         return (ItemType)(rand() % 1);
     else // NUM_OF_STAIR_TYPE
         return item_delete;

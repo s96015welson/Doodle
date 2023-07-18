@@ -47,6 +47,7 @@ public:
     // plyer do action
     void player_do_LR_action(int &key);
     void player_do_UPDOWN_action();
+    int LR = LEFT;
 
     // change_doodle_image
     int doodle_image = DOODLEUL;

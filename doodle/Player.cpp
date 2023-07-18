@@ -155,7 +155,7 @@ void Player::player_do_UPDOWN_action()
     else if (move_action == FALL)
     {
         fall(fall_speed);
-        if (fall_speed < 26)
+        if (fall_speed < 24)
             fall_speed += PLAYER_ACCELRATION;
         // std::cout <<"fall speed"<< fall_speed << std::endl;
     }
@@ -165,6 +165,7 @@ void Player::change_player_image(int new_image_code)
 {
     if (new_image_code == DOODLEL)
     {
+        LR = LEFT;
         if (doodle_image == DOODLEUR)
             set_image(DOODLEUL);
 
@@ -173,6 +174,7 @@ void Player::change_player_image(int new_image_code)
     }
     else if (new_image_code == DOODLER)
     {
+        LR = RIGHT;
         if (doodle_image == DOODLEUL)
             set_image(DOODLEUR);
 
@@ -198,9 +200,16 @@ void Player::change_player_image(int new_image_code)
             set_image(DOODLEL);
     }
     else if (new_image_code == DOODLEH1)
+    {
+        LR = LEFT;
         set_image(DOODLEH1);
+    }
+
     else if (new_image_code == DOODLEJ1)
+    {
+        LR = LEFT;
         set_image(DOODLEJ1);
+    }
 }
 void Player::set_image(int new_player_image)
 {
@@ -302,7 +311,7 @@ void Player::update_image()
             else if (UP_times % 6 == 5)
                 set_image(DOODLEJ7);
         }
-        else 
+        else
         {
             if (UP_times % 2 == 0)
                 set_image(DOODLEJ8);

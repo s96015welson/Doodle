@@ -40,6 +40,7 @@ public:
     // void keyReleaseEvent(QKeyEvent *event);
     void ShowMsg();
 
+
 public slots:
     void updating();
 
@@ -63,6 +64,8 @@ private:
     // int time
     int timerID;
     QImage img;
+    //
+    QGraphicsPixmapItem *start_pic;
 };
 
 #endif // GAME_H

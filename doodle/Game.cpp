@@ -17,6 +17,7 @@
 #include "ItemOnStair.h"
 #include "Monster.h"
 #include "Bullet.h"
+#include "unistd.h"
 #include <string>
 
 Game::Game(QWidget *parent)
@@ -25,11 +26,10 @@ Game::Game(QWidget *parent)
     setMouseTracking(true);
     srand(time(NULL));
     createScene();
-
+    // start
     reset();
     std::cout << "reset ready" << std::endl;
     registerUpdatingCallback();
-
     show();
 }
 
@@ -59,7 +59,7 @@ void Game::createScene()
 {
     // create the scene
     scene = new QGraphicsScene();
-    scene->setSceneRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // make the scene 800x600 instead of infinity by infinity (default)
+    scene->setSceneRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // make the newly created scene the scene to visualize (since Game is a QGraphicsView Widget,
     // it can be used to visualize scenes)
@@ -70,9 +70,16 @@ void Game::createScene()
 
     // ADD BACKGROUND
     QGraphicsPixmapItem *pic = new QGraphicsPixmapItem();
-    pic->setPixmap(QPixmap("./dataset/images/background.png"));
+    pic->setPixmap(QPixmap("./dataset/images/background.png").scaled(540, 960));
     scene->addItem(pic);
     pic->setPos(0, 0);
+
+    // ADD start
+    start_pic = new QGraphicsPixmapItem();
+    start_pic->setPixmap(QPixmap("./dataset/images/reference-start-interface.png").scaled(540, 960));
+    scene->addItem(start_pic);
+    start_pic->setPos(0, 0);
+    start_pic->setZValue(START_SCENE);
 }
 
 void Game::reset()
@@ -159,19 +166,30 @@ void Game::keyPressEvent(QKeyEvent *event)
 }
 void Game::mousePressEvent(QMouseEvent *event)
 {
+    //bullet
     addBullet = true;
     targetX = event->x();
     targetY = event->y();
+    //start
+    if (start_pic != nullptr && (targetX > 90 && targetX < 270 && targetY > 250 && targetY < 320))
+    {
+        scene->removeItem(start_pic);
+        start_pic = nullptr;
+    }
+    //std::cout << targetX << " " << targetY << "\n";
 }
 
 void Game::updating()
 {
+    // Bedore start
+    if (start_pic != nullptr)
+        return;
     // player die?
     if (player->outOfScreen() == true || health->getHealth() <= 0)
     {
-        reset();
-        ShowMsg();
 
+        ShowMsg();
+        reset();
         return;
     }
 
@@ -219,20 +237,30 @@ void Game::updating()
 
 Stair *Game::getWherePlayerStandingOn(Player *player)
 {
-    if (player->move_action == FALL || player->move_action == RISE)
+    if (player->move_action == FALL || player->move_action == RISE || player->move_action == JUMP)
     {
         // touch item
         for (ItemOnStair *item : items)
+
         {
+            // std::cout << "****" << item->pos_Left() << " " << item->pos_Up() <<" "<<item->get_itemtype()<< "\n";
+            // std::cout << "*//*" << player->pos_Left() << " " << player->pos_Up() << "\n";
             if (((player->pos_Left() > item->pos_Left() && player->pos_Left() < item->pos_Right()) ||
                  (player->pos_Left() + 40 > item->pos_Left() && player->pos_Left() + 40 < item->pos_Right()) ||
                  (player->pos_Right() > item->pos_Left() && player->pos_Right() < item->pos_Right())) &&
                 ((player->pos_Down() < item->pos_Down() && player->pos_Down() > item->pos_Up()) ||
+                 (player->pos_Up() + 60 < item->pos_Down() && player->pos_Up() + 60 > item->pos_Up()) ||
                  (player->pos_Up() + 40 < item->pos_Down() && player->pos_Up() + 40 > item->pos_Up()) ||
+                 (player->pos_Up() + 20 < item->pos_Down() && player->pos_Up() + 20 > item->pos_Up()) ||
                  (player->pos_Up() < item->pos_Down() && player->pos_Up() > item->pos_Up())) &&
                 (item->get_itemtype() != item_delete) && (player->move_action == FALL))
             {
-                if (player->move_action == FALL)
+                // std::cout << player->x() << " " << player->y() << "/" << item->pos_Left() << " " << item->pos_Up() << "\n";
+                // std::cout << player->x() + 80 << " " << player->y() + 80 << "/" << item->pos_Right() << " " << item->pos_Down() << "\n";
+                // std::cout << "-----------------\n";
+                if ((player->move_action == FALL) &&
+                    ((player->pos_Down() < item->pos_Down() && player->pos_Down() > item->pos_Up()) ||
+                     (player->pos_Down() - 20 < item->pos_Down() && player->pos_Down() - 20 > item->pos_Up())))
                 {
                     if (item->get_itemtype() == spring) // sdpring
                     {
@@ -240,6 +268,8 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                         player->UP_times = PLAYER_SPRING_JUMPING_TIMES;
                         player->jumping_speed = PLAYER_SPRING_JUMPING_SPEED;
                         item->change_item_image(SPRING2);
+                        item->change_item_type(item_delete);
+                        player->change_player_image(DOODLE_RISE);
                     }
 
                     else if (item->get_itemtype() == trampoline) // trampoline
@@ -248,6 +278,8 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                         player->UP_times = PLAYER_TRAMPOLINE_JUMPING_TIMES;
                         player->jumping_speed = PLAYER_TRAMPOLINE_JUMPING_SPEED;
                         item->change_item_image(TRAMPOLINE3);
+                        item->change_item_type(item_delete);
+                        player->change_player_image(DOODLE_RISE);
                     }
                 }
 
@@ -258,6 +290,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     player->flying_speed = PLAYER_PROPELLER_HAT_FLYING__SPEED;
                     item->fall(SCREEN_HEIGHT);
                     player->change_player_image(DOODLEH1);
+                    item->change_item_type(item_delete);
                 }
 
                 else if (item->get_itemtype() == jet_pack) // jet pack
@@ -267,10 +300,8 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     player->flying_speed = PLAYER_JETPACK_FLYING__SPEED;
                     item->fall(SCREEN_HEIGHT);
                     player->change_player_image(DOODLEJ1);
+                    item->change_item_type(item_delete);
                 }
-
-                item->change_item_type(item_delete);
-                // item->fall(SCREEN_HEIGHT);
 
                 return nullptr;
             }
@@ -288,25 +319,28 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                 (player->pos_Down() < stair->pos_Down() && player->pos_Down() > stair->pos_Up()) &&
                 (stair->get_stairtype() != stair_delete))
             {
-                // touch stair
-                if (stair->get_stairtype() == stair_broken)
+                if ((player->LR == LEFT && player->pos_Left() + 20 < stair->pos_Right()) || (player->LR == RIGHT && player->pos_Right() - 20 > stair->pos_Left()))
                 {
-                    stair->change_stair_type(stair_delete);
-                    stair->isbroken = true;
-                    // std::cout << stair->get_stairtype() << std::endl;
-                    return stair;
-                }
-                if (stair->get_stairtype() == stair_disappear)
-                {
-                    stair->change_stair_type(stair_delete);
-                    stair->isdisappear = true;
-                }
-                if (stair->get_stairtype() != stair_broken) // rise if touch stairs excluded stair_broken()
-                {
-                    player->move_action = RISE;
-                    player->UP_times = PLAYER_RISING_TIMES;
-                    player->change_player_image(DOODLE_RISE);
-                    return stair;
+                    // touch stair
+                    if (stair->get_stairtype() == stair_broken)
+                    {
+                        stair->change_stair_type(stair_delete);
+                        stair->isbroken = true;
+                        // std::cout << stair->get_stairtype() << std::endl;
+                        return stair;
+                    }
+                    if (stair->get_stairtype() == stair_disappear)
+                    {
+                        stair->change_stair_type(stair_delete);
+                        stair->isdisappear = true;
+                    }
+                    if (stair->get_stairtype() != stair_broken) // rise if touch stairs excluded stair_broken()
+                    {
+                        player->move_action = RISE;
+                        player->UP_times = PLAYER_RISING_TIMES;
+                        player->change_player_image(DOODLE_RISE);
+                        return stair;
+                    }
                 }
             }
         }
