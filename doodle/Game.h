@@ -57,7 +57,7 @@ private:
 
     int addItem_and_monster(Stair *stair, int);
     //bullet parameter
-    bool addBullet =false;
+    bool addBullet;
     int targetX;
     int targetY;
 
@@ -65,7 +65,7 @@ private:
     int timerID;
     QImage img;
     //
-    QGraphicsPixmapItem *start_pic;
+    QGraphicsPixmapItem *start_pic = nullptr;
 };
 
 #endif // GAME_H

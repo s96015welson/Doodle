@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QDebug>
 #include <QObject>
+#include <QSound>
 #include <QMessageBox>
 #include <ctime>
 #include <cstdlib>
@@ -45,13 +46,13 @@ void Game::ShowMsg()
     // QString final_score = ;
 
     msgBox.setStyleSheet("QLabel{"
-                         "min-width:150px;"
-                         "min-height:50px;"
+                         "min-width:180px;"
+                         "min-height:100px;"
                          "font-size:16px;"
                          "}");
-    // char* info = ;
-
-    msgBox.setText("Game Over!");
+    QString qStr1 = "Game Over!\nFinal Score:";
+    QString qStr2 = QString::number(score->getScore());
+    msgBox.setText(qStr1 + qStr2);
     msgBox.exec();
 }
 
@@ -69,12 +70,15 @@ void Game::createScene()
     setFixedSize(SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // ADD BACKGROUND
+
+
     QGraphicsPixmapItem *pic = new QGraphicsPixmapItem();
     pic->setPixmap(QPixmap("./dataset/images/background.png").scaled(540, 960));
     scene->addItem(pic);
     pic->setPos(0, 0);
 
     // ADD start
+
     start_pic = new QGraphicsPixmapItem();
     start_pic->setPixmap(QPixmap("./dataset/images/reference-start-interface.png").scaled(540, 960));
     scene->addItem(start_pic);
@@ -84,6 +88,8 @@ void Game::createScene()
 
 void Game::reset()
 {
+    // setting renew
+    addBullet = false;
     key = Qt::Key_No;
 
     // RESET PLAYER
@@ -166,27 +172,33 @@ void Game::keyPressEvent(QKeyEvent *event)
 }
 void Game::mousePressEvent(QMouseEvent *event)
 {
-    //bullet
-    addBullet = true;
+
     targetX = event->x();
     targetY = event->y();
-    //start
-    if (start_pic != nullptr && (targetX > 90 && targetX < 270 && targetY > 250 && targetY < 320))
+
+    if (start_pic != nullptr && (targetX > 90 && targetX < 270 && targetY > 250 && targetY < 320)) // start
     {
+        QSound::play("./dataset/sounds/jump.wav");
         scene->removeItem(start_pic);
         start_pic = nullptr;
     }
-    //std::cout << targetX << " " << targetY << "\n";
+    else if (start_pic == nullptr) // bullet
+        addBullet = true;
 }
 
 void Game::updating()
 {
+
     // Bedore start
     if (start_pic != nullptr)
         return;
     // player die?
     if (player->outOfScreen() == true || health->getHealth() <= 0)
     {
+        if (player->outOfScreen() == true)
+            QSound::play("./dataset/sounds/falldown.wav");
+        else
+            QSound::play("./dataset/sounds/jumponmonster.wav");
 
         ShowMsg();
         reset();
@@ -211,6 +223,8 @@ void Game::updating()
 
     if (addBullet)
     {
+        QSound::play("./dataset/sounds/shoot.wav");
+
         addBullet = false;
         Bullet *bullet = new Bullet(player->x(), player->y(), targetX, targetY);
         bullets.push_back(bullet);
@@ -270,6 +284,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                         item->change_item_image(SPRING2);
                         item->change_item_type(item_delete);
                         player->change_player_image(DOODLE_RISE);
+                        QSound::play("./dataset/sounds/spring.wav");
                     }
 
                     else if (item->get_itemtype() == trampoline) // trampoline
@@ -280,6 +295,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                         item->change_item_image(TRAMPOLINE3);
                         item->change_item_type(item_delete);
                         player->change_player_image(DOODLE_RISE);
+                        QSound::play("./dataset/sounds/trampoline.wav");
                     }
                 }
 
@@ -291,6 +307,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     item->fall(SCREEN_HEIGHT);
                     player->change_player_image(DOODLEH1);
                     item->change_item_type(item_delete);
+                    QSound::play("./dataset/sounds/propeller.wav");
                 }
 
                 else if (item->get_itemtype() == jet_pack) // jet pack
@@ -301,6 +318,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     item->fall(SCREEN_HEIGHT);
                     player->change_player_image(DOODLEJ1);
                     item->change_item_type(item_delete);
+                    QSound::play("./dataset/sounds/rocket.wav");
                 }
 
                 return nullptr;
@@ -326,6 +344,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                     {
                         stair->change_stair_type(stair_delete);
                         stair->isbroken = true;
+                        QSound::play("./dataset/sounds/break.wav");
                         // std::cout << stair->get_stairtype() << std::endl;
                         return stair;
                     }
@@ -339,6 +358,7 @@ Stair *Game::getWherePlayerStandingOn(Player *player)
                         player->move_action = RISE;
                         player->UP_times = PLAYER_RISING_TIMES;
                         player->change_player_image(DOODLE_RISE);
+                        QSound::play("./dataset/sounds/jump.wav");
                         return stair;
                     }
                 }
@@ -463,8 +483,7 @@ int Game::addItem_and_monster(Stair *stair, int stair_interval)
         // add new item
         ItemOnStair *item = new ItemOnStair(score, stair);
 
-        items.push_back(item);
-        scene->addItem(item);
+
         if (stair_interval < item->height())
             stair_interval = item->height() * 1.1;
     }
@@ -497,6 +516,7 @@ void Game::touchMonster()
                 // kill monster
                 monster->change_monster_type(monster_delete);
                 monster->fall(SCREEN_HEIGHT * 2);
+
                 // remove bullet
             }
         }
@@ -509,6 +529,7 @@ void Game::touchMonster()
                 (player->pos_Down() < monster->pos_Up() + 30 && player->pos_Down() > monster->pos_Up()) &&
                 (monster->get_MonsterType() != monster_delete))
             {
+                QSound::play("./dataset/sounds/jumponmonster.wav");
                 // doodle rise
                 player->move_action = RISE;
                 player->UP_times = PLAYER_RISING_TIMES;
